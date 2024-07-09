@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useGlobalContext } from '@/context/GlobalContext';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ThemeSwitcher } from './ThemeSwitcher';
 
 export const Layout = ({ children }) => {
   const router = useRouter();
@@ -30,15 +31,15 @@ export const Layout = ({ children }) => {
   ];
 
   const Sidebar = () => (
-    <div className="h-full bg-white">
+    <div className="h-full bg-background">
       <div className="p-4">
-        <h1 className="text-2xl font-bold text-gray-800">CRM Pro</h1>
+        <h1 className="text-2xl font-bold text-foreground">CRM Pro</h1>
       </div>
       <nav className="mt-8">
         {menuItems.map((item, index) => (
           <Link href={item.href} key={index}>
-            <span className={`flex items-center px-4 py-2 text-gray-700 hover:bg-gray-200 ${
-              router.pathname === item.href ? 'bg-gray-200' : ''
+            <span className={`flex items-center px-4 py-2 text-foreground hover:bg-accent ${
+              router.pathname === item.href ? 'bg-accent' : ''
             }`}>
               <item.icon className="w-5 h-5 mr-3" />
               {item.label}
@@ -50,16 +51,16 @@ export const Layout = ({ children }) => {
   );
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-background text-foreground">
       {/* Sidebar for larger screens */}
-      <aside className="hidden md:block w-64 bg-white shadow-md">
+      <aside className="hidden md:block w-64 bg-card shadow-md">
         <Sidebar />
       </aside>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-white shadow-sm z-10">
+        <header className="bg-card shadow-sm z-10">
           <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
             <div className="flex items-center">
               {/* Mobile menu */}
@@ -78,14 +79,15 @@ export const Layout = ({ children }) => {
                 placeholder="Search..."
                 className="w-64 mr-4"
               />
-              <Search className="w-5 h-5 text-gray-400" />
+              <Search className="w-5 h-5 text-muted-foreground" />
             </div>
-            <div className="flex items-center">
-              <Button variant="ghost" size="icon" className="mr-2">
+            <div className="flex items-center space-x-2">
+              <ThemeSwitcher />
+              <Button variant="ghost" size="icon">
                 <Bell className="w-5 h-5" />
               </Button>
               <Avatar>
-                <AvatarImage src={state.user?.image || "/api/placeholder/32/32"} alt={state.user?.name || "User"} />
+                <AvatarImage src={state.user?.image || "/placeholder.png"} alt={state.user?.name || "User"} />
                 <AvatarFallback>{state.user?.name?.[0] || "U"}</AvatarFallback>
               </Avatar>
             </div>
@@ -93,7 +95,7 @@ export const Layout = ({ children }) => {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {children}
           </div>
