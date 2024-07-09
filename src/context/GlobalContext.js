@@ -22,6 +22,7 @@ const DELETE_CONTACT = 'DELETE_CONTACT';
 const ADD_LEAD = 'ADD_LEAD';
 const UPDATE_LEAD = 'UPDATE_LEAD';
 const MOVE_LEAD = 'MOVE_LEAD';
+const DELETE_LEAD = 'DELETE_LEAD';
 const ADD_TASK = 'ADD_TASK';
 const UPDATE_TASK = 'UPDATE_TASK';
 const DELETE_TASK = 'DELETE_TASK';
@@ -63,6 +64,16 @@ const reducer = (state, action) => {
           [fromStatus]: state.leads[fromStatus].filter(lead => lead.id !== leadId),
           [toStatus]: [...state.leads[toStatus], { ...leadToMove, status: toStatus }]
         }
+      };
+    case DELETE_LEAD:
+      return {
+        ...state,
+        leads: Object.fromEntries(
+          Object.entries(state.leads).map(([status, leads]) => [
+            status,
+            leads.filter(lead => lead.id !== action.payload)
+          ])
+        )
       };
     case ADD_TASK:
       return { ...state, tasks: [...state.tasks, action.payload] };
@@ -124,6 +135,7 @@ export const deleteContact = (contactId) => ({ type: DELETE_CONTACT, payload: co
 export const addLead = (lead) => ({ type: ADD_LEAD, payload: lead });
 export const updateLead = (lead) => ({ type: UPDATE_LEAD, payload: lead });
 export const moveLead = (leadId, fromStatus, toStatus) => ({ type: MOVE_LEAD, payload: { leadId, fromStatus, toStatus } });
+export const deleteLead = (leadId) => ({ type: DELETE_LEAD, payload: leadId });
 export const addTask = (task) => ({ type: ADD_TASK, payload: task });
 export const updateTask = (task) => ({ type: UPDATE_TASK, payload: task });
 export const deleteTask = (taskId) => ({ type: DELETE_TASK, payload: taskId });

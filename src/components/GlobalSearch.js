@@ -1,18 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useGlobalContext } from '@/context/GlobalContext';
 import { Search } from 'lucide-react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function GlobalSearch() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
   const { state } = useGlobalContext();
 
-  const searchResults = React.useMemo(() => {
-    if (!searchTerm) return [];
+  useEffect(() => {
+    if (!searchTerm) {
+      setSearchResults([]);
+      return;
+    }
 
     const lowerSearchTerm = searchTerm.toLowerCase();
 
@@ -33,8 +38,15 @@ export function GlobalSearch() {
       )
       .map(lead => ({ ...lead, type: 'lead' }));
 
-    return [...contactResults, ...leadResults].slice(0, 10); // Limit to 10 results
-  }, [searchTerm, state.contacts, state.leads]);
+    const taskResults = state.tasks
+      .filter(task => 
+        task.title.toLowerCase().includes(lowerSearchTerm) ||
+        task.description.toLowerCase().includes(lowerSearchTerm)
+      )
+      .map(task => ({ ...task, type: 'task' }));
+
+    setSearchResults([...contactResults, ...leadResults, ...taskResults].slice(0, 10));
+  }, [searchTerm, state]);
 
   return (
     <>
@@ -49,28 +61,56 @@ export function GlobalSearch() {
           </DialogHeader>
           <Input
             type="text"
-            placeholder="Search contacts, leads..."
+            placeholder="Search contacts, leads, tasks..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            autoFocus
           />
-          <div className="mt-4 space-y-2">
-            {searchResults.map((result) => (
-              <Link
-                key={result.id}
-                href={result.type === 'contact' ? `/contacts/${result.id}` : `/leads#${result.id}`}
-                onClick={() => setIsOpen(false)}
-                className="block p-2 hover:bg-accent rounded-md"
+          <AnimatePresence>
+            {searchResults.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mt-4 space-y-2"
               >
-                <div className="font-semibold">{result.name}</div>
-                <div className="text-sm text-muted-foreground">
-                  {result.type === 'contact' ? 'Contact' : 'Lead'} - {result.company}
-                </div>
-              </Link>
-            ))}
-            {searchResults.length === 0 && searchTerm && (
-              <div className="text-center text-muted-foreground">No results found</div>
+                {searchResults.map((result) => (
+                  <motion.div
+                    key={`${result.type}-${result.id}`}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Link
+                      href={
+                        result.type === 'contact' ? `/contacts/${result.id}` :
+                        result.type === 'lead' ? `/leads#${result.id}` :
+                        `/tasks#${result.id}`
+                      }
+                      onClick={() => setIsOpen(false)}
+                      className="block p-2 hover:bg-accent rounded-md"
+                    >
+                      <div className="font-semibold">{result.name || result.title}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {result.type.charAt(0).toUpperCase() + result.type.slice(1)} - {result.company || result.status}
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </motion.div>
             )}
-          </div>
+            {searchTerm && searchResults.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-center text-muted-foreground mt-4"
+              >
+                No results found
+              </motion.div>
+            )}
+          </AnimatePresence>
         </DialogContent>
       </Dialog>
     </>
