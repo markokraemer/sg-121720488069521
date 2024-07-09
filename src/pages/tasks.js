@@ -31,7 +31,7 @@ export default function Tasks() {
   const [editingTask, setEditingTask] = useState(null);
   const { toast } = useToast();
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm({
     resolver: zodResolver(taskSchema),
   });
 
@@ -63,7 +63,9 @@ export default function Tasks() {
   const handleEdit = (task) => {
     setEditingTask(task);
     setIsAddDialogOpen(true);
-    reset(task);
+    Object.keys(task).forEach(key => {
+      setValue(key, task[key]);
+    });
   };
 
   const handleDelete = (id) => {
@@ -145,7 +147,7 @@ export default function Tasks() {
             </div>
             <div>
               <Label htmlFor="priority">Priority</Label>
-              <Select onValueChange={(value) => register("priority").onChange({ target: { value } })} defaultValue={editingTask?.priority || "medium"}>
+              <Select onValueChange={(value) => setValue("priority", value)} defaultValue={editingTask?.priority || "medium"}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select priority" />
                 </SelectTrigger>
@@ -158,7 +160,7 @@ export default function Tasks() {
             </div>
             <div>
               <Label htmlFor="status">Status</Label>
-              <Select onValueChange={(value) => register("status").onChange({ target: { value } })} defaultValue={editingTask?.status || "todo"}>
+              <Select onValueChange={(value) => setValue("status", value)} defaultValue={editingTask?.status || "todo"}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
