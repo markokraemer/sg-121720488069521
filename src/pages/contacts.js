@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useGlobalContext } from '@/context/GlobalContext';
 
 const contactSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -16,29 +17,33 @@ const contactSchema = z.object({
   company: z.string().min(1, { message: "Company is required." }),
 });
 
-const initialContacts = [
-  { id: 1, name: "John Doe", email: "john@example.com", phone: "+1 234 567 890", company: "ABC Corp" },
-  { id: 2, name: "Jane Smith", email: "jane@example.com", phone: "+1 234 567 891", company: "XYZ Inc" },
-  { id: 3, name: "Bob Johnson", email: "bob@example.com", phone: "+1 234 567 892", company: "123 LLC" },
-];
-
 export default function Contacts() {
-  const [contacts, setContacts] = useState(initialContacts);
+  const { state, dispatch } = useGlobalContext();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: zodResolver(contactSchema),
   });
 
+  useEffect(() => {
+    // Load contacts from global state
+    // This is just a placeholder, you might want to fetch contacts from an API in a real application
+  }, []);
+
   const onSubmit = (data) => {
     if (editingContact) {
-      setContacts(contacts.map(contact => 
-        contact.id === editingContact.id ? { ...contact, ...data } : contact
-      ));
+      dispatch({
+        type: 'UPDATE_CONTACT',
+        payload: { ...editingContact, ...data }
+      });
       setEditingContact(null);
     } else {
-      setContacts([...contacts, { id: Date.now(), ...data }]);
+      dispatch({
+        type: 'ADD_CONTACT',
+        payload: { id: Date.now().toString(), ...data }
+      });
     }
     setIsAddDialogOpen(false);
     reset();
@@ -51,8 +56,17 @@ export default function Contacts() {
   };
 
   const handleDelete = (id) => {
-    setContacts(contacts.filter(contact => contact.id !== id));
+    dispatch({
+      type: 'DELETE_CONTACT',
+      payload: id
+    });
   };
+
+  const filteredContacts = state.contacts.filter(contact =>
+    contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    contact.company.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-4">
@@ -68,6 +82,8 @@ export default function Contacts() {
           type="text"
           placeholder="Search contacts..."
           className="max-w-sm"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
         <Button variant="ghost" size="icon">
           <Search className="h-4 w-4" />
@@ -85,7 +101,7 @@ export default function Contacts() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {contacts.map((contact) => (
+          {filteredContacts.map((contact) => (
             <TableRow key={contact.id}>
               <TableCell className="font-medium">{contact.name}</TableCell>
               <TableCell>{contact.email}</TableCell>
