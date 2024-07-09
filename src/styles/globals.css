@@ -161,3 +161,18 @@
 .border-gradient {
   @apply border-2 border-transparent bg-gradient-to-r from-primary to-primary-foreground bg-clip-border;
 }
+
+/* Logo animation */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.navbar-logo svg {
+  animation: pulse 2s infinite;
+}
+
+.navbar-logo:hover svg {
+  animation: none;
+  transform: scale(1.1);
+}
