@@ -11,12 +11,12 @@ import {
   BarChart3, 
   Settings, 
   Bell,
-  Search,
   Menu
 } from 'lucide-react';
 import { useGlobalContext } from '@/context/GlobalContext';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeSwitcher } from './ThemeSwitcher';
+import { GlobalSearch } from './GlobalSearch';
 
 export const Layout = ({ children }) => {
   const router = useRouter();
@@ -74,12 +74,7 @@ export const Layout = ({ children }) => {
                   <Sidebar />
                 </SheetContent>
               </Sheet>
-              <Input
-                type="search"
-                placeholder="Search..."
-                className="w-64 mr-4"
-              />
-              <Search className="w-5 h-5 text-muted-foreground" />
+              <GlobalSearch />
             </div>
             <div className="flex items-center space-x-2">
               <ThemeSwitcher />
