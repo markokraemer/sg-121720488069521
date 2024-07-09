@@ -9,7 +9,6 @@ import {
   Target, 
   BarChart3, 
   Settings, 
-  Bell,
   Menu,
   CheckSquare,
   Mail,
@@ -22,6 +21,7 @@ import { ThemeSwitcher } from './ThemeSwitcher';
 import { GlobalSearch } from './GlobalSearch';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useTheme } from 'next-themes';
+import { Notifications } from './Notifications';
 
 export const Layout = ({ children }) => {
   const router = useRouter();
@@ -81,9 +81,7 @@ export const Layout = ({ children }) => {
             <div className="flex items-center space-x-2 md:space-x-4">
               <GlobalSearch />
               <ThemeSwitcher />
-              <Button variant="ghost" size="icon" className="hidden lg:inline-flex">
-                <Bell className="w-5 h-5" />
-              </Button>
+              <Notifications />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Avatar className="cursor-pointer w-8 h-8">
