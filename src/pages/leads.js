@@ -6,11 +6,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, MoreVertical } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, MoreVertical, Search } from 'lucide-react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useGlobalContext } from '@/context/GlobalContext';
+import { useToast } from "@/components/ui/use-toast";
 
 const leadSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -18,31 +20,35 @@ const leadSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
   phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, { message: "Invalid phone number." }),
   status: z.enum(["new", "contacted", "qualified", "closed"]),
+  value: z.number().min(0, { message: "Value must be a positive number." }),
   notes: z.string().optional(),
+  contactId: z.string().optional(),
 });
 
 const LeadCard = ({ lead, index, onEdit }) => (
   <Draggable draggableId={lead.id} index={index}>
     {(provided) => (
-      <div
+      <Card
         ref={provided.innerRef}
         {...provided.draggableProps}
         {...provided.dragHandleProps}
-        className="bg-white p-4 mb-2 rounded shadow"
+        className="mb-2 cursor-move hover:shadow-md transition-shadow duration-200"
       >
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="font-semibold">{lead.name}</h3>
-            <p className="text-sm text-gray-600">{lead.company}</p>
-            <p className="text-sm text-gray-600">{lead.email}</p>
-            <p className="text-sm text-gray-600">{lead.phone}</p>
+        <CardContent className="p-4">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="font-semibold">{lead.name}</h3>
+              <p className="text-sm text-gray-600">{lead.company}</p>
+              <p className="text-sm text-gray-600">{lead.email}</p>
+              <p className="text-sm text-gray-600">${lead.value}</p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => onEdit(lead)}>
+              <MoreVertical className="h-4 w-4" />
+            </Button>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => onEdit(lead)}>
-            <MoreVertical className="h-4 w-4" />
-          </Button>
-        </div>
-        {lead.notes && <p className="text-sm mt-2">{lead.notes}</p>}
-      </div>
+          {lead.notes && <p className="text-sm mt-2 text-gray-700">{lead.notes}</p>}
+        </CardContent>
+      </Card>
     )}
   </Draggable>
 );
@@ -71,6 +77,8 @@ export default function Leads() {
   const { state, dispatch } = useGlobalContext();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const { toast } = useToast();
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: zodResolver(leadSchema),
@@ -88,6 +96,11 @@ export default function Leads() {
         toStatus: destination.droppableId,
       }
     });
+
+    toast({
+      title: "Lead Moved",
+      description: `Lead has been moved to ${destination.droppableId} stage.`,
+    });
   };
 
   const onSubmit = (data) => {
@@ -96,14 +109,22 @@ export default function Leads() {
         type: 'UPDATE_LEAD',
         payload: { ...editingLead, ...data }
       });
-      setEditingLead(null);
+      toast({
+        title: "Lead Updated",
+        description: `${data.name} has been successfully updated.`,
+      });
     } else {
       dispatch({
         type: 'ADD_LEAD',
         payload: { id: Date.now().toString(), ...data }
       });
+      toast({
+        title: "Lead Added",
+        description: `${data.name} has been successfully added to your leads.`,
+      });
     }
     setIsAddDialogOpen(false);
+    setEditingLead(null);
     reset();
   };
 
@@ -112,6 +133,17 @@ export default function Leads() {
     setIsAddDialogOpen(true);
     reset(lead);
   };
+
+  const filteredLeads = Object.fromEntries(
+    Object.entries(state.leads).map(([status, leads]) => [
+      status,
+      leads.filter(lead =>
+        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.email.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    ])
+  );
 
   return (
     <div className="space-y-4">
@@ -122,12 +154,25 @@ export default function Leads() {
         </Button>
       </div>
 
+      <div className="flex items-center space-x-2 mb-4">
+        <Input
+          type="text"
+          placeholder="Search leads..."
+          className="max-w-sm"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <Button variant="ghost" size="icon">
+          <Search className="h-4 w-4" />
+        </Button>
+      </div>
+
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="flex space-x-4 overflow-x-auto pb-4">
-          <LeadColumn title="New" leads={state.leads.new} id="new" onEdit={handleEdit} />
-          <LeadColumn title="Contacted" leads={state.leads.contacted} id="contacted" onEdit={handleEdit} />
-          <LeadColumn title="Qualified" leads={state.leads.qualified} id="qualified" onEdit={handleEdit} />
-          <LeadColumn title="Closed" leads={state.leads.closed} id="closed" onEdit={handleEdit} />
+          <LeadColumn title="New" leads={filteredLeads.new} id="new" onEdit={handleEdit} />
+          <LeadColumn title="Contacted" leads={filteredLeads.contacted} id="contacted" onEdit={handleEdit} />
+          <LeadColumn title="Qualified" leads={filteredLeads.qualified} id="qualified" onEdit={handleEdit} />
+          <LeadColumn title="Closed" leads={filteredLeads.closed} id="closed" onEdit={handleEdit} />
         </div>
       </DragDropContext>
 
@@ -159,17 +204,41 @@ export default function Leads() {
             </div>
             <div>
               <Label htmlFor="status">Status</Label>
-              <select id="status" {...register("status")} className="w-full p-2 border rounded">
-                <option value="new">New</option>
-                <option value="contacted">Contacted</option>
-                <option value="qualified">Qualified</option>
-                <option value="closed">Closed</option>
-              </select>
+              <Select onValueChange={(value) => register("status").onChange({ target: { value } })} defaultValue={editingLead?.status || "new"}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="contacted">Contacted</SelectItem>
+                  <SelectItem value="qualified">Qualified</SelectItem>
+                  <SelectItem value="closed">Closed</SelectItem>
+                </SelectContent>
+              </Select>
               {errors.status && <p className="text-red-500 text-sm">{errors.status.message}</p>}
+            </div>
+            <div>
+              <Label htmlFor="value">Value</Label>
+              <Input id="value" type="number" {...register("value", { valueAsNumber: true })} />
+              {errors.value && <p className="text-red-500 text-sm">{errors.value.message}</p>}
             </div>
             <div>
               <Label htmlFor="notes">Notes</Label>
               <Textarea id="notes" {...register("notes")} />
+            </div>
+            <div>
+              <Label htmlFor="contactId">Associated Contact</Label>
+              <Select onValueChange={(value) => register("contactId").onChange({ target: { value } })} defaultValue={editingLead?.contactId || ""}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a contact" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {state.contacts.map(contact => (
+                    <SelectItem key={contact.id} value={contact.id}>{contact.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <Button type="submit">{editingLead ? 'Update' : 'Add'} Lead</Button>
           </form>
