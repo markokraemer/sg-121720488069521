@@ -45,7 +45,7 @@ export const Layout = ({ children }) => {
         router.pathname === href ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-secondary hover:text-secondary-foreground'
       }`}>
         <Icon className="w-5 h-5 mr-2" />
-        <span className="hidden md:inline">{label}</span>
+        <span className="hidden lg:inline">{label}</span>
       </span>
     </Link>
   );
@@ -81,7 +81,7 @@ export const Layout = ({ children }) => {
             <div className="flex items-center space-x-2 md:space-x-4">
               <GlobalSearch />
               <ThemeSwitcher />
-              <Button variant="ghost" size="icon" className="hidden md:inline-flex">
+              <Button variant="ghost" size="icon" className="hidden lg:inline-flex">
                 <Bell className="w-5 h-5" />
               </Button>
               <DropdownMenu>
