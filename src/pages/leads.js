@@ -10,6 +10,7 @@ import { Plus, MoreVertical } from 'lucide-react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useGlobalContext } from '@/context/GlobalContext';
 
 const leadSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -19,22 +20,6 @@ const leadSchema = z.object({
   status: z.enum(["new", "contacted", "qualified", "closed"]),
   notes: z.string().optional(),
 });
-
-const initialLeads = {
-  new: [
-    { id: 'lead1', name: 'John Doe', company: 'ABC Corp', email: 'john@example.com', phone: '+1234567890', status: 'new', notes: 'Interested in Product A' },
-    { id: 'lead2', name: 'Jane Smith', company: 'XYZ Inc', email: 'jane@example.com', phone: '+1987654321', status: 'new', notes: 'Requested Demo' },
-  ],
-  contacted: [
-    { id: 'lead3', name: 'Bob Johnson', company: '123 LLC', email: 'bob@example.com', phone: '+1122334455', status: 'contacted', notes: 'Follow-up Call Scheduled' },
-  ],
-  qualified: [
-    { id: 'lead4', name: 'Alice Brown', company: 'Tech Co', email: 'alice@example.com', phone: '+1555666777', status: 'qualified', notes: 'Proposal Sent' },
-  ],
-  closed: [
-    { id: 'lead5', name: 'Charlie Davis', company: 'Big Corp', email: 'charlie@example.com', phone: '+1999888777', status: 'closed', notes: 'Deal Closed' },
-  ],
-};
 
 const LeadCard = ({ lead, index, onEdit }) => (
   <Draggable draggableId={lead.id} index={index}>
@@ -83,7 +68,7 @@ const LeadColumn = ({ title, leads, id, onEdit }) => (
 );
 
 export default function Leads() {
-  const [leads, setLeads] = useState(initialLeads);
+  const { state, dispatch } = useGlobalContext();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
 
@@ -95,34 +80,28 @@ export default function Leads() {
     const { source, destination } = result;
     if (!destination) return;
 
-    const sourceColumn = leads[source.droppableId];
-    const destColumn = leads[destination.droppableId];
-    const [removed] = sourceColumn.splice(source.index, 1);
-    destColumn.splice(destination.index, 0, { ...removed, status: destination.droppableId });
-
-    setLeads({
-      ...leads,
-      [source.droppableId]: sourceColumn,
-      [destination.droppableId]: destColumn,
+    dispatch({
+      type: 'MOVE_LEAD',
+      payload: {
+        leadId: result.draggableId,
+        fromStatus: source.droppableId,
+        toStatus: destination.droppableId,
+      }
     });
   };
 
   const onSubmit = (data) => {
     if (editingLead) {
-      const updatedLeads = { ...leads };
-      Object.keys(updatedLeads).forEach(status => {
-        updatedLeads[status] = updatedLeads[status].map(lead => 
-          lead.id === editingLead.id ? { ...lead, ...data } : lead
-        );
+      dispatch({
+        type: 'UPDATE_LEAD',
+        payload: { ...editingLead, ...data }
       });
-      setLeads(updatedLeads);
       setEditingLead(null);
     } else {
-      const newLead = { id: Date.now().toString(), ...data };
-      setLeads(prev => ({
-        ...prev,
-        [data.status]: [...prev[data.status], newLead],
-      }));
+      dispatch({
+        type: 'ADD_LEAD',
+        payload: { id: Date.now().toString(), ...data }
+      });
     }
     setIsAddDialogOpen(false);
     reset();
@@ -145,10 +124,10 @@ export default function Leads() {
 
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="flex space-x-4 overflow-x-auto pb-4">
-          <LeadColumn title="New" leads={leads.new} id="new" onEdit={handleEdit} />
-          <LeadColumn title="Contacted" leads={leads.contacted} id="contacted" onEdit={handleEdit} />
-          <LeadColumn title="Qualified" leads={leads.qualified} id="qualified" onEdit={handleEdit} />
-          <LeadColumn title="Closed" leads={leads.closed} id="closed" onEdit={handleEdit} />
+          <LeadColumn title="New" leads={state.leads.new} id="new" onEdit={handleEdit} />
+          <LeadColumn title="Contacted" leads={state.leads.contacted} id="contacted" onEdit={handleEdit} />
+          <LeadColumn title="Qualified" leads={state.leads.qualified} id="qualified" onEdit={handleEdit} />
+          <LeadColumn title="Closed" leads={state.leads.closed} id="closed" onEdit={handleEdit} />
         </div>
       </DragDropContext>
 
