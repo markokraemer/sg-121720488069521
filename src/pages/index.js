@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { useGlobalContext } from '@/context/GlobalContext';
 import { Button } from "@/components/ui/button";
 import { resetToSampleData } from '@/utils/sampleData';
 import { motion } from "framer-motion";
+import { Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const CustomXAxis = ({ x, y, payload }) => (
   <g transform={`translate(${x},${y})`}>
@@ -26,6 +28,28 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 export default function Dashboard() {
   const { state, dispatch } = useGlobalContext();
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleResetData = async () => {
+    setIsLoading(true);
+    try {
+      await resetToSampleData(dispatch);
+      toast({
+        title: "Data Reset Successful",
+        description: "Sample data has been loaded successfully.",
+        variant: "success",
+      });
+    } catch (error) {
+      toast({
+        title: "Data Reset Failed",
+        description: "An error occurred while resetting data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const revenueData = [
     { name: "Jan", total: Math.floor(Math.random() * 5000) + 1000 },
@@ -44,13 +68,13 @@ export default function Dashboard() {
   ];
 
   const taskCompletionData = [
-    { name: "Mon", completed: 5 },
-    { name: "Tue", completed: 8 },
-    { name: "Wed", completed: 12 },
-    { name: "Thu", completed: 7 },
-    { name: "Fri", completed: 10 },
-    { name: "Sat", completed: 3 },
-    { name: "Sun", completed: 2 },
+    { name: "Mon", completed: state.tasks.filter(task => task.status === 'done').length },
+    { name: "Tue", completed: state.tasks.filter(task => task.status === 'done').length },
+    { name: "Wed", completed: state.tasks.filter(task => task.status === 'done').length },
+    { name: "Thu", completed: state.tasks.filter(task => task.status === 'done').length },
+    { name: "Fri", completed: state.tasks.filter(task => task.status === 'done').length },
+    { name: "Sat", completed: state.tasks.filter(task => task.status === 'done').length },
+    { name: "Sun", completed: state.tasks.filter(task => task.status === 'done').length },
   ];
 
   return (
@@ -62,7 +86,16 @@ export default function Dashboard() {
     >
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <Button onClick={() => resetToSampleData(dispatch)}>Reset to Sample Data</Button>
+        <Button onClick={handleResetData} disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Resetting Data
+            </>
+          ) : (
+            'Reset to Sample Data'
+          )}
+        </Button>
       </div>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -119,7 +152,7 @@ export default function Dashboard() {
         <motion.div whileHover={{ scale: 1.05 }} transition={{ type: "spring", stiffness: 300 }}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Sales This Month</CardTitle>
+              <CardTitle className="text-sm font-medium">Tasks Completed</CardTitle>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -135,15 +168,15 @@ export default function Dashboard() {
               </svg>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">$45,231.89</div>
-              <p className="text-xs text-muted-foreground">+20.1% from last month</p>
+              <div className="text-2xl font-bold">{state.tasks.filter(task => task.status === 'done').length}</div>
+              <p className="text-xs text-muted-foreground">+10% from last week</p>
             </CardContent>
           </Card>
         </motion.div>
         <motion.div whileHover={{ scale: 1.05 }} transition={{ type: "spring", stiffness: 300 }}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+              <CardTitle className="text-sm font-medium">Recent Emails</CardTitle>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -158,8 +191,8 @@ export default function Dashboard() {
               </svg>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">573</div>
-              <p className="text-xs text-muted-foreground">+201 since last hour</p>
+              <div className="text-2xl font-bold">{state.emails.length}</div>
+              <p className="text-xs text-muted-foreground">+5% from yesterday</p>
             </CardContent>
           </Card>
         </motion.div>
