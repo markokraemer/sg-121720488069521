@@ -9,6 +9,8 @@ const initialState = {
     qualified: [],
     closed: []
   },
+  tasks: [],
+  emails: [],
   user: null,
   notifications: []
 };
@@ -20,9 +22,15 @@ const DELETE_CONTACT = 'DELETE_CONTACT';
 const ADD_LEAD = 'ADD_LEAD';
 const UPDATE_LEAD = 'UPDATE_LEAD';
 const MOVE_LEAD = 'MOVE_LEAD';
+const ADD_TASK = 'ADD_TASK';
+const UPDATE_TASK = 'UPDATE_TASK';
+const DELETE_TASK = 'DELETE_TASK';
+const SEND_EMAIL = 'SEND_EMAIL';
 const SET_USER = 'SET_USER';
 const ADD_NOTIFICATION = 'ADD_NOTIFICATION';
 const REMOVE_NOTIFICATION = 'REMOVE_NOTIFICATION';
+const RESET_DATA = 'RESET_DATA';
+const RESET_DATA_ERROR = 'RESET_DATA_ERROR';
 
 // Reducer
 const reducer = (state, action) => {
@@ -56,12 +64,24 @@ const reducer = (state, action) => {
           [toStatus]: [...state.leads[toStatus], { ...leadToMove, status: toStatus }]
         }
       };
+    case ADD_TASK:
+      return { ...state, tasks: [...state.tasks, action.payload] };
+    case UPDATE_TASK:
+      return { ...state, tasks: state.tasks.map(task => task.id === action.payload.id ? action.payload : task) };
+    case DELETE_TASK:
+      return { ...state, tasks: state.tasks.filter(task => task.id !== action.payload) };
+    case SEND_EMAIL:
+      return { ...state, emails: [...state.emails, action.payload] };
     case SET_USER:
       return { ...state, user: action.payload };
     case ADD_NOTIFICATION:
       return { ...state, notifications: [...state.notifications, action.payload] };
     case REMOVE_NOTIFICATION:
       return { ...state, notifications: state.notifications.filter(notif => notif.id !== action.payload) };
+    case RESET_DATA:
+      return { ...state, ...action.payload };
+    case RESET_DATA_ERROR:
+      return { ...state, error: action.payload };
     default:
       return state;
   }
@@ -78,7 +98,7 @@ export const GlobalProvider = ({ children }) => {
   useEffect(() => {
     const savedState = localStorage.getItem('crmState');
     if (savedState) {
-      dispatch({ type: 'LOAD_STATE', payload: JSON.parse(savedState) });
+      dispatch({ type: 'RESET_DATA', payload: JSON.parse(savedState) });
     }
   }, []);
 
@@ -104,6 +124,12 @@ export const deleteContact = (contactId) => ({ type: DELETE_CONTACT, payload: co
 export const addLead = (lead) => ({ type: ADD_LEAD, payload: lead });
 export const updateLead = (lead) => ({ type: UPDATE_LEAD, payload: lead });
 export const moveLead = (leadId, fromStatus, toStatus) => ({ type: MOVE_LEAD, payload: { leadId, fromStatus, toStatus } });
+export const addTask = (task) => ({ type: ADD_TASK, payload: task });
+export const updateTask = (task) => ({ type: UPDATE_TASK, payload: task });
+export const deleteTask = (taskId) => ({ type: DELETE_TASK, payload: taskId });
+export const sendEmail = (email) => ({ type: SEND_EMAIL, payload: email });
 export const setUser = (user) => ({ type: SET_USER, payload: user });
 export const addNotification = (notification) => ({ type: ADD_NOTIFICATION, payload: notification });
 export const removeNotification = (notificationId) => ({ type: REMOVE_NOTIFICATION, payload: notificationId });
+export const resetData = (data) => ({ type: RESET_DATA, payload: data });
+export const resetDataError = (error) => ({ type: RESET_DATA_ERROR, payload: error });

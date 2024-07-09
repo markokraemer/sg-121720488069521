@@ -26,24 +26,68 @@ const generateLead = (contactId) => ({
   contactId: contactId,
 });
 
-export const generateSampleData = (contactCount = 50, leadsPerContact = 2) => {
-  const contacts = Array.from({ length: contactCount }, generateContact);
-  
-  const leads = contacts.flatMap(contact => 
-    Array.from({ length: leadsPerContact }, () => generateLead(contact.id))
-  );
+const generateTask = () => ({
+  id: faker.string.uuid(),
+  title: faker.lorem.sentence(),
+  description: faker.lorem.paragraph(),
+  dueDate: faker.date.future(),
+  priority: faker.helpers.arrayElement(['low', 'medium', 'high']),
+  status: faker.helpers.arrayElement(['todo', 'in_progress', 'done']),
+  associatedWith: faker.helpers.arrayElement([
+    { type: 'contact', id: faker.string.uuid() },
+    { type: 'lead', id: faker.string.uuid() },
+    null
+  ]),
+});
 
-  const groupedLeads = {
-    new: leads.filter(lead => lead.status === 'new'),
-    contacted: leads.filter(lead => lead.status === 'contacted'),
-    qualified: leads.filter(lead => lead.status === 'qualified'),
-    closed: leads.filter(lead => lead.status === 'closed'),
-  };
+const generateEmail = () => ({
+  id: faker.string.uuid(),
+  to: faker.internet.email(),
+  from: faker.internet.email(),
+  subject: faker.lorem.sentence(),
+  body: faker.lorem.paragraphs(),
+  date: faker.date.recent(),
+  folder: faker.helpers.arrayElement(['inbox', 'sent', 'drafts', 'starred']),
+});
 
-  return { contacts, leads: groupedLeads };
+export const generateSampleData = (contactCount = 50, leadsPerContact = 2, taskCount = 100, emailCount = 200) => {
+  try {
+    const contacts = Array.from({ length: contactCount }, generateContact);
+    
+    const leads = contacts.flatMap(contact => 
+      Array.from({ length: leadsPerContact }, () => generateLead(contact.id))
+    );
+
+    const tasks = Array.from({ length: taskCount }, generateTask);
+
+    const emails = Array.from({ length: emailCount }, generateEmail);
+
+    const groupedLeads = {
+      new: leads.filter(lead => lead.status === 'new'),
+      contacted: leads.filter(lead => lead.status === 'contacted'),
+      qualified: leads.filter(lead => lead.status === 'qualified'),
+      closed: leads.filter(lead => lead.status === 'closed'),
+    };
+
+    return { contacts, leads: groupedLeads, tasks, emails };
+  } catch (error) {
+    console.error('Error generating sample data:', error);
+    return {
+      contacts: [],
+      leads: { new: [], contacted: [], qualified: [], closed: [] },
+      tasks: [],
+      emails: [],
+    };
+  }
 };
 
 export const resetToSampleData = (dispatch) => {
-  const sampleData = generateSampleData();
-  dispatch({ type: 'RESET_DATA', payload: sampleData });
+  try {
+    const sampleData = generateSampleData();
+    dispatch({ type: 'RESET_DATA', payload: sampleData });
+    console.log('Sample data reset successful');
+  } catch (error) {
+    console.error('Error resetting to sample data:', error);
+    dispatch({ type: 'RESET_DATA_ERROR', payload: error.message });
+  }
 };
