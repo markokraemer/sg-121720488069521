@@ -13,6 +13,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useGlobalContext } from '@/context/GlobalContext';
 import { useToast } from "@/components/ui/use-toast";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const leadSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -25,7 +26,7 @@ const leadSchema = z.object({
   contactId: z.string().optional(),
 });
 
-const LeadCard = ({ lead, index, onEdit }) => (
+const LeadCard = ({ lead, index, onEdit, onDelete }) => (
   <Draggable draggableId={lead.id} index={index}>
     {(provided) => (
       <Card
@@ -42,9 +43,17 @@ const LeadCard = ({ lead, index, onEdit }) => (
               <p className="text-sm text-gray-600">{lead.email}</p>
               <p className="text-sm text-gray-600">${lead.value}</p>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => onEdit(lead)}>
-              <MoreVertical className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => onEdit(lead)}>Edit</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDelete(lead.id)} className="text-red-600">Delete</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           {lead.notes && <p className="text-sm mt-2 text-gray-700">{lead.notes}</p>}
         </CardContent>
@@ -53,7 +62,7 @@ const LeadCard = ({ lead, index, onEdit }) => (
   </Draggable>
 );
 
-const LeadColumn = ({ title, leads, id, onEdit }) => (
+const LeadColumn = ({ title, leads, id, onEdit, onDelete }) => (
   <Card className="w-64">
     <CardHeader>
       <CardTitle>{title}</CardTitle>
@@ -63,7 +72,7 @@ const LeadColumn = ({ title, leads, id, onEdit }) => (
         {(provided) => (
           <div {...provided.droppableProps} ref={provided.innerRef}>
             {leads.map((lead, index) => (
-              <LeadCard key={lead.id} lead={lead} index={index} onEdit={onEdit} />
+              <LeadCard key={lead.id} lead={lead} index={index} onEdit={onEdit} onDelete={onDelete} />
             ))}
             {provided.placeholder}
           </div>
@@ -80,7 +89,7 @@ export default function Leads() {
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm({
     resolver: zodResolver(leadSchema),
   });
 
@@ -131,7 +140,21 @@ export default function Leads() {
   const handleEdit = (lead) => {
     setEditingLead(lead);
     setIsAddDialogOpen(true);
-    reset(lead);
+    Object.keys(lead).forEach(key => {
+      setValue(key, lead[key]);
+    });
+  };
+
+  const handleDelete = (id) => {
+    dispatch({
+      type: 'DELETE_LEAD',
+      payload: id
+    });
+    toast({
+      title: "Lead Deleted",
+      description: "The lead has been successfully deleted.",
+      variant: "destructive",
+    });
   };
 
   const filteredLeads = Object.fromEntries(
@@ -169,10 +192,10 @@ export default function Leads() {
 
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="flex space-x-4 overflow-x-auto pb-4">
-          <LeadColumn title="New" leads={filteredLeads.new} id="new" onEdit={handleEdit} />
-          <LeadColumn title="Contacted" leads={filteredLeads.contacted} id="contacted" onEdit={handleEdit} />
-          <LeadColumn title="Qualified" leads={filteredLeads.qualified} id="qualified" onEdit={handleEdit} />
-          <LeadColumn title="Closed" leads={filteredLeads.closed} id="closed" onEdit={handleEdit} />
+          <LeadColumn title="New" leads={filteredLeads.new} id="new" onEdit={handleEdit} onDelete={handleDelete} />
+          <LeadColumn title="Contacted" leads={filteredLeads.contacted} id="contacted" onEdit={handleEdit} onDelete={handleDelete} />
+          <LeadColumn title="Qualified" leads={filteredLeads.qualified} id="qualified" onEdit={handleEdit} onDelete={handleDelete} />
+          <LeadColumn title="Closed" leads={filteredLeads.closed} id="closed" onEdit={handleEdit} onDelete={handleDelete} />
         </div>
       </DragDropContext>
 
@@ -204,7 +227,7 @@ export default function Leads() {
             </div>
             <div>
               <Label htmlFor="status">Status</Label>
-              <Select onValueChange={(value) => register("status").onChange({ target: { value } })} defaultValue={editingLead?.status || "new"}>
+              <Select onValueChange={(value) => setValue("status", value)} defaultValue={editingLead?.status || "new"}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a status" />
                 </SelectTrigger>
@@ -228,7 +251,7 @@ export default function Leads() {
             </div>
             <div>
               <Label htmlFor="contactId">Associated Contact</Label>
-              <Select onValueChange={(value) => register("contactId").onChange({ target: { value } })} defaultValue={editingLead?.contactId || ""}>
+              <Select onValueChange={(value) => setValue("contactId", value)} defaultValue={editingLead?.contactId || ""}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a contact" />
                 </SelectTrigger>
