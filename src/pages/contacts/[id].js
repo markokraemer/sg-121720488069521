@@ -7,24 +7,72 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Phone, Mail, Building, MapPin, Linkedin, Twitter, FileText, User, Target } from 'lucide-react';
+import { useToast } from "@/components/ui/use-toast";
 
 export default function ContactDetail() {
   const router = useRouter();
   const { id } = router.query;
-  const { state } = useGlobalContext();
+  const { state, dispatch } = useGlobalContext();
+  const { toast } = useToast();
 
   const contact = state.contacts.find(c => c.id === id);
-  const relatedLeads = state.leads.new.concat(state.leads.contacted, state.leads.qualified, state.leads.closed)
+  const relatedLeads = Object.values(state.leads)
+    .flat()
     .filter(lead => lead.contactId === id);
 
   if (!contact) {
     return <div>Contact not found</div>;
   }
 
+  const handleEditContact = () => {
+    // Implement edit functionality
+    toast({
+      title: "Edit Contact",
+      description: "Edit functionality to be implemented.",
+    });
+  };
+
+  const handleDeleteContact = () => {
+    dispatch({
+      type: 'DELETE_CONTACT',
+      payload: id
+    });
+    toast({
+      title: "Contact Deleted",
+      description: "The contact has been successfully deleted.",
+      variant: "destructive",
+    });
+    router.push('/contacts');
+  };
+
+  const handleAddNote = () => {
+    // Implement add note functionality
+    toast({
+      title: "Add Note",
+      description: "Note adding functionality to be implemented.",
+    });
+  };
+
+  const handleScheduleMeeting = () => {
+    // Implement schedule meeting functionality
+    toast({
+      title: "Schedule Meeting",
+      description: "Meeting scheduling functionality to be implemented.",
+    });
+  };
+
+  const handleCreateLead = () => {
+    // Implement create lead functionality
+    toast({
+      title: "Create Lead",
+      description: "Lead creation functionality to be implemented.",
+    });
+  };
+
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-full space-y-4 lg:space-y-0 lg:space-x-4">
       {/* Left Sidebar */}
-      <aside className="w-64 bg-gray-100 p-4 overflow-y-auto">
+      <aside className="w-full lg:w-1/4 space-y-4">
         <Card>
           <CardContent className="pt-6">
             <Avatar className="w-20 h-20 mx-auto mb-4">
@@ -34,27 +82,53 @@ export default function ContactDetail() {
             <h2 className="text-2xl font-bold text-center mb-2">{contact.name}</h2>
             <p className="text-center text-gray-500 mb-4">{contact.company}</p>
             <div className="flex justify-center space-x-2">
-              <Button size="sm"><Phone className="w-4 h-4 mr-2" /> Call</Button>
-              <Button size="sm"><Mail className="w-4 h-4 mr-2" /> Email</Button>
+              <Button size="sm" onClick={() => window.location.href = `tel:${contact.phone}`}>
+                <Phone className="w-4 h-4 mr-2" /> Call
+              </Button>
+              <Button size="sm" onClick={() => window.location.href = `mailto:${contact.email}`}>
+                <Mail className="w-4 h-4 mr-2" /> Email
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Button className="w-full" onClick={handleAddNote}>
+                <FileText className="w-4 h-4 mr-2" /> Add Note
+              </Button>
+              <Button className="w-full" onClick={handleScheduleMeeting}>
+                <User className="w-4 h-4 mr-2" /> Schedule Meeting
+              </Button>
+              <Button className="w-full" onClick={handleCreateLead}>
+                <Target className="w-4 h-4 mr-2" /> Create Lead
+              </Button>
             </div>
           </CardContent>
         </Card>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-8">
-        <Tabs defaultValue="overview">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
-            <TabsTrigger value="notes">Notes</TabsTrigger>
-          </TabsList>
-          <TabsContent value="overview">
-            <Card>
-              <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
-              </CardHeader>
-              <CardContent>
+      <main className="flex-1">
+        <Card className="mb-4">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Contact Information</CardTitle>
+            <div>
+              <Button variant="outline" className="mr-2" onClick={handleEditContact}>Edit</Button>
+              <Button variant="destructive" onClick={handleDeleteContact}>Delete</Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="overview">
+              <TabsList>
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="activity">Activity</TabsTrigger>
+                <TabsTrigger value="notes">Notes</TabsTrigger>
+              </TabsList>
+              <TabsContent value="overview">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center">
                     <Mail className="w-5 h-5 mr-2 text-gray-500" />
@@ -81,70 +155,40 @@ export default function ContactDetail() {
                     <span>{contact.socialMedia?.twitter || 'N/A'}</span>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Related Leads</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {relatedLeads.length > 0 ? (
-                  <ul className="space-y-2">
-                    {relatedLeads.map(lead => (
-                      <li key={lead.id} className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <Target className="w-5 h-5 mr-2 text-gray-500" />
-                          <span>{lead.name} - {lead.company}</span>
-                        </div>
-                        <Badge>{lead.status}</Badge>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No related leads found.</p>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="activity">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-              </CardHeader>
-              <CardContent>
+              </TabsContent>
+              <TabsContent value="activity">
                 <p>Activity timeline will be implemented here.</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="notes">
-            <Card>
-              <CardHeader>
-                <CardTitle>Notes</CardTitle>
-              </CardHeader>
-              <CardContent>
+              </TabsContent>
+              <TabsContent value="notes">
                 <p>{contact.notes || 'No notes available.'}</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </main>
-
-      {/* Right Sidebar */}
-      <aside className="w-64 bg-gray-100 p-4 overflow-y-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Button className="w-full"><FileText className="w-4 h-4 mr-2" /> Add Note</Button>
-              <Button className="w-full"><User className="w-4 h-4 mr-2" /> Schedule Meeting</Button>
-              <Button className="w-full"><Target className="w-4 h-4 mr-2" /> Create Lead</Button>
-            </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
-      </aside>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Related Leads</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {relatedLeads.length > 0 ? (
+              <ul className="space-y-2">
+                {relatedLeads.map(lead => (
+                  <li key={lead.id} className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Target className="w-5 h-5 mr-2 text-gray-500" />
+                      <span>{lead.name} - {lead.company}</span>
+                    </div>
+                    <Badge>{lead.status}</Badge>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No related leads found.</p>
+            )}
+          </CardContent>
+        </Card>
+      </main>
     </div>
   );
 }
