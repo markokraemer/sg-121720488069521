@@ -12,6 +12,22 @@ const data = [
   { name: "Jun", total: Math.floor(Math.random() * 5000) + 1000 },
 ];
 
+const CustomXAxis = ({ x, y, payload }) => (
+  <g transform={`translate(${x},${y})`}>
+    <text x={0} y={0} dy={16} textAnchor="middle" fill="#888888" fontSize={12}>
+      {payload.value}
+    </text>
+  </g>
+);
+
+const CustomYAxis = ({ x, y, payload }) => (
+  <g transform={`translate(${x},${y})`}>
+    <text x={0} y={0} dy={5} textAnchor="end" fill="#888888" fontSize={12}>
+      ${payload.value}
+    </text>
+  </g>
+);
+
 export default function Dashboard() {
   const { state } = useGlobalContext();
 
@@ -118,20 +134,8 @@ export default function Dashboard() {
         <CardContent className="pl-2">
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={data}>
-              <XAxis
-                dataKey="name"
-                stroke="#888888"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                stroke="#888888"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => `$${value}`}
-              />
+              <XAxis dataKey="name" tick={<CustomXAxis />} tickLine={false} axisLine={false} />
+              <YAxis tick={<CustomYAxis />} tickLine={false} axisLine={false} />
               <Tooltip />
               <Legend />
               <Bar dataKey="total" fill="#adfa1d" radius={[4, 4, 0, 0]} />
