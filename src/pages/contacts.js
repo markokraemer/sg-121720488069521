@@ -2,19 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Edit, Trash } from 'lucide-react';
+import { Plus, Search, Edit, Trash, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useGlobalContext } from '@/context/GlobalContext';
+import Link from 'next/link';
+import { useToast } from "@/components/ui/use-toast";
 
 const contactSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Invalid email address." }),
   phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, { message: "Invalid phone number." }),
   company: z.string().min(1, { message: "Company is required." }),
+  address: z.string().optional(),
+  socialMedia: z.object({
+    linkedin: z.string().url({ message: "Invalid LinkedIn URL" }).optional().or(z.literal('')),
+    twitter: z.string().url({ message: "Invalid Twitter URL" }).optional().or(z.literal('')),
+  }).optional(),
+  notes: z.string().optional(),
 });
 
 export default function Contacts() {
@@ -22,6 +30,9 @@ export default function Contacts() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [contactsPerPage] = useState(10);
+  const { toast } = useToast();
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: zodResolver(contactSchema),
@@ -38,14 +49,22 @@ export default function Contacts() {
         type: 'UPDATE_CONTACT',
         payload: { ...editingContact, ...data }
       });
-      setEditingContact(null);
+      toast({
+        title: "Contact Updated",
+        description: `${data.name} has been successfully updated.`,
+      });
     } else {
       dispatch({
         type: 'ADD_CONTACT',
         payload: { id: Date.now().toString(), ...data }
       });
+      toast({
+        title: "Contact Added",
+        description: `${data.name} has been successfully added to your contacts.`,
+      });
     }
     setIsAddDialogOpen(false);
+    setEditingContact(null);
     reset();
   };
 
@@ -60,6 +79,11 @@ export default function Contacts() {
       type: 'DELETE_CONTACT',
       payload: id
     });
+    toast({
+      title: "Contact Deleted",
+      description: "The contact has been successfully deleted.",
+      variant: "destructive",
+    });
   };
 
   const filteredContacts = state.contacts.filter(contact =>
@@ -67,6 +91,14 @@ export default function Contacts() {
     contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     contact.company.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Get current contacts
+  const indexOfLastContact = currentPage * contactsPerPage;
+  const indexOfFirstContact = indexOfLastContact - contactsPerPage;
+  const currentContacts = filteredContacts.slice(indexOfFirstContact, indexOfLastContact);
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
     <div className="space-y-4">
@@ -101,7 +133,7 @@ export default function Contacts() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredContacts.map((contact) => (
+          {currentContacts.map((contact) => (
             <TableRow key={contact.id}>
               <TableCell className="font-medium">{contact.name}</TableCell>
               <TableCell>{contact.email}</TableCell>
@@ -114,11 +146,30 @@ export default function Contacts() {
                 <Button variant="ghost" className="text-red-500" onClick={() => handleDelete(contact.id)}>
                   <Trash className="h-4 w-4 mr-2" /> Delete
                 </Button>
+                <Link href={`/contacts/${contact.id}`} passHref>
+                  <Button variant="ghost">
+                    <ExternalLink className="h-4 w-4 mr-2" /> View
+                  </Button>
+                </Link>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      {/* Pagination */}
+      <div className="flex justify-center mt-4">
+        {Array.from({ length: Math.ceil(filteredContacts.length / contactsPerPage) }, (_, i) => (
+          <Button
+            key={i}
+            onClick={() => paginate(i + 1)}
+            variant={currentPage === i + 1 ? "default" : "outline"}
+            className="mx-1"
+          >
+            {i + 1}
+          </Button>
+        ))}
+      </div>
 
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent>
@@ -145,6 +196,24 @@ export default function Contacts() {
               <Label htmlFor="company">Company</Label>
               <Input id="company" {...register("company")} />
               {errors.company && <p className="text-red-500 text-sm">{errors.company.message}</p>}
+            </div>
+            <div>
+              <Label htmlFor="address">Address</Label>
+              <Input id="address" {...register("address")} />
+            </div>
+            <div>
+              <Label htmlFor="linkedin">LinkedIn</Label>
+              <Input id="linkedin" {...register("socialMedia.linkedin")} />
+              {errors.socialMedia?.linkedin && <p className="text-red-500 text-sm">{errors.socialMedia.linkedin.message}</p>}
+            </div>
+            <div>
+              <Label htmlFor="twitter">Twitter</Label>
+              <Input id="twitter" {...register("socialMedia.twitter")} />
+              {errors.socialMedia?.twitter && <p className="text-red-500 text-sm">{errors.socialMedia.twitter.message}</p>}
+            </div>
+            <div>
+              <Label htmlFor="notes">Notes</Label>
+              <Input id="notes" {...register("notes")} />
             </div>
             <Button type="submit">{editingContact ? 'Update' : 'Add'} Contact</Button>
           </form>
