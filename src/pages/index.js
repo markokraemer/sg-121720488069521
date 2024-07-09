@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import { useGlobalContext } from '@/context/GlobalContext';
 
 const data = [
   { name: "Jan", total: Math.floor(Math.random() * 5000) + 1000 },
@@ -12,6 +13,8 @@ const data = [
 ];
 
 export default function Dashboard() {
+  const { state } = useGlobalContext();
+
   return (
     <div className="space-y-4">
       <h1 className="text-3xl font-bold">Dashboard</h1>
@@ -36,8 +39,8 @@ export default function Dashboard() {
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2,350</div>
-            <p className="text-xs text-muted-foreground">+180 from last month</p>
+            <div className="text-2xl font-bold">{state.contacts.length}</div>
+            <p className="text-xs text-muted-foreground">+20% from last month</p>
           </CardContent>
         </Card>
         <Card>
@@ -57,8 +60,10 @@ export default function Dashboard() {
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">573</div>
-            <p className="text-xs text-muted-foreground">+201 since last week</p>
+            <div className="text-2xl font-bold">
+              {Object.values(state.leads).reduce((acc, curr) => acc + curr.length, 0)}
+            </div>
+            <p className="text-xs text-muted-foreground">+15% from last week</p>
           </CardContent>
         </Card>
         <Card>
@@ -127,6 +132,8 @@ export default function Dashboard() {
                 axisLine={false}
                 tickFormatter={(value) => `$${value}`}
               />
+              <Tooltip />
+              <Legend />
               <Bar dataKey="total" fill="#adfa1d" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
