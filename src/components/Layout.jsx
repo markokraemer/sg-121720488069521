@@ -86,7 +86,7 @@ export const Layout = ({ children }) => {
                 <Bell className="w-5 h-5" />
               </Button>
               <Avatar>
-                <AvatarImage src={state.user?.image || "/api/placeholder/32/32"} alt={state.user?.name || "User"} />
+                <AvatarImage src="/default-avatar.png" alt={state.user?.name || "User"} />
                 <AvatarFallback>{state.user?.name?.[0] || "U"}</AvatarFallback>
               </Avatar>
             </div>
