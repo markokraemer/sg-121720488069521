@@ -11,7 +11,8 @@ import {
   BarChart3, 
   Settings, 
   Bell,
-  Menu
+  Menu,
+  CheckSquare
 } from 'lucide-react';
 import { useGlobalContext } from '@/context/GlobalContext';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -26,6 +27,7 @@ export const Layout = ({ children }) => {
     { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
     { icon: Users, label: 'Contacts', href: '/contacts' },
     { icon: Target, label: 'Leads', href: '/leads' },
+    { icon: CheckSquare, label: 'Tasks', href: '/tasks' },
     { icon: BarChart3, label: 'Reports', href: '/reports' },
     { icon: Settings, label: 'Settings', href: '/settings' },
   ];
