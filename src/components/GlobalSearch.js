@@ -50,9 +50,8 @@ export function GlobalSearch() {
 
   return (
     <>
-      <Button variant="outline" onClick={() => setIsOpen(true)}>
-        <Search className="h-4 w-4 mr-2" />
-        Search
+      <Button variant="ghost" size="icon" onClick={() => setIsOpen(true)} className="hidden md:inline-flex">
+        <Search className="h-5 w-5" />
       </Button>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-[425px]">

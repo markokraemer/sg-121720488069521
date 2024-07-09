@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   LayoutDashboard, 
@@ -14,7 +13,8 @@ import {
   Menu,
   CheckSquare,
   Mail,
-  X
+  X,
+  Search
 } from 'lucide-react';
 import { useGlobalContext } from '@/context/GlobalContext';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -45,7 +45,7 @@ export const Layout = ({ children }) => {
         router.pathname === href ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-secondary hover:text-secondary-foreground'
       }`}>
         <Icon className="w-5 h-5 mr-2" />
-        {label}
+        <span className="hidden md:inline">{label}</span>
       </span>
     </Link>
   );
@@ -55,11 +55,11 @@ export const Layout = ({ children }) => {
       <header className="navbar">
         <div className="navbar-container">
           <div className="navbar-content">
-            {/* Logo container with added margin */}
-            <div className="flex items-center mr-8">
+            {/* Logo container */}
+            <div className="flex items-center mr-4">
               <Link href="/" passHref>
                 <span className="navbar-logo group" title="CRM Pro">
-                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 sm:w-12 sm:h-12 transition-all duration-300 ease-in-out transform group-hover:scale-110">
+                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 sm:w-10 sm:h-10 transition-all duration-300 ease-in-out transform group-hover:scale-110">
                     <rect width="40" height="40" rx="8" className="fill-primary transition-colors duration-300" />
                     <path d="M20 10C14.4772 10 10 14.4772 10 20C10 25.5228 14.4772 30 20 30C25.5228 30 30 25.5228 30 20C30 14.4772 25.5228 10 20 10ZM20 28C15.5817 28 12 24.4183 12 20C12 15.5817 15.5817 12 20 12C24.4183 12 28 15.5817 28 20C28 24.4183 24.4183 28 20 28Z" fill={theme === 'dark' ? '#1a1a1a' : 'white'} className="transition-all duration-300 ease-in-out transform group-hover:rotate-180" />
                     <path d="M20 14C16.6863 14 14 16.6863 14 20C14 23.3137 16.6863 26 20 26C23.3137 26 26 23.3137 26 20C26 16.6863 23.3137 14 20 14ZM20 24C17.7909 24 16 22.2091 16 20C16 17.7909 17.7909 16 20 16C22.2091 16 24 17.7909 24 20C24 22.2091 22.2091 24 20 24Z" fill={theme === 'dark' ? '#1a1a1a' : 'white'} className="transition-all duration-300 ease-in-out transform group-hover:rotate-90" />
@@ -71,22 +71,22 @@ export const Layout = ({ children }) => {
             </div>
 
             {/* Navigation links */}
-            <nav className="navbar-links flex-grow">
+            <nav className="hidden md:flex space-x-1 lg:space-x-2 flex-grow justify-center">
               {menuItems.map((item, index) => (
                 <NavLink key={index} {...item} />
               ))}
             </nav>
 
             {/* Right-side items */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 md:space-x-4">
               <GlobalSearch />
               <ThemeSwitcher />
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="hidden md:inline-flex">
                 <Bell className="w-5 h-5" />
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Avatar className="cursor-pointer">
+                  <Avatar className="cursor-pointer w-8 h-8">
                     <AvatarImage src="/default-avatar.png" alt={state.user?.name || "User"} />
                     <AvatarFallback>{state.user?.name?.[0] || "U"}</AvatarFallback>
                   </Avatar>
