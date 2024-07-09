@@ -55,7 +55,8 @@ export const Layout = ({ children }) => {
       <header className="navbar">
         <div className="navbar-container">
           <div className="navbar-content">
-            <div className="flex items-center">
+            {/* Logo container with added margin */}
+            <div className="flex items-center mr-8">
               <Link href="/" passHref>
                 <span className="navbar-logo group" title="CRM Pro">
                   <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 sm:w-12 sm:h-12 transition-all duration-300 ease-in-out transform group-hover:scale-110">
@@ -69,12 +70,14 @@ export const Layout = ({ children }) => {
               </Link>
             </div>
 
-            <nav className="navbar-links">
+            {/* Navigation links */}
+            <nav className="navbar-links flex-grow">
               {menuItems.map((item, index) => (
                 <NavLink key={index} {...item} />
               ))}
             </nav>
 
+            {/* Right-side items */}
             <div className="flex items-center space-x-4">
               <GlobalSearch />
               <ThemeSwitcher />

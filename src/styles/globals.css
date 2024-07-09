@@ -131,7 +131,7 @@
 }
 
 .navbar-links {
-  @apply hidden md:flex space-x-8;
+  @apply hidden md:flex space-x-4;
 }
 
 .navbar-link {
