@@ -1,44 +1,60 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bar, BarChart, Line, LineChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const salesData = [
-  { month: 'Jan', sales: 4000 },
-  { month: 'Feb', sales: 3000 },
-  { month: 'Mar', sales: 5000 },
-  { month: 'Apr', sales: 4500 },
-  { month: 'May', sales: 6000 },
-  { month: 'Jun', sales: 5500 },
-];
+const generateData = (period) => {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const data = [];
+  const startMonth = period === 'lastYear' ? 0 : period === 'lastQuarter' ? 9 : 11;
+  for (let i = startMonth; i < months.length; i++) {
+    data.push({
+      month: months[i],
+      sales: Math.floor(Math.random() * 5000) + 1000,
+      leads: Math.floor(Math.random() * 100) + 10,
+      conversionRate: Math.floor(Math.random() * 30) + 10,
+    });
+  }
+  return data;
+};
 
-const leadSourceData = [
-  { name: 'Website', value: 400 },
-  { name: 'Referral', value: 300 },
-  { name: 'Social Media', value: 300 },
-  { name: 'Email', value: 200 },
-];
+const CustomXAxis = ({ x, y, payload }) => (
+  <g transform={`translate(${x},${y})`}>
+    <text x={0} y={0} dy={16} textAnchor="middle" fill="#888888" fontSize={12}>
+      {payload.value}
+    </text>
+  </g>
+);
 
-const conversionRateData = [
-  { month: 'Jan', rate: 20 },
-  { month: 'Feb', rate: 25 },
-  { month: 'Mar', rate: 30 },
-  { month: 'Apr', rate: 22 },
-  { month: 'May', rate: 28 },
-  { month: 'Jun', rate: 32 },
-];
+const CustomYAxis = ({ x, y, payload }) => (
+  <g transform={`translate(${x},${y})`}>
+    <text x={0} y={0} dy={5} textAnchor="end" fill="#888888" fontSize={12}>
+      ${payload.value}
+    </text>
+  </g>
+);
 
 export default function Reports() {
+  const [period, setPeriod] = useState('lastMonth');
+  const data = generateData(period);
+
+  const leadSourceData = [
+    { name: 'Website', value: 400 },
+    { name: 'Referral', value: 300 },
+    { name: 'Social Media', value: 300 },
+    { name: 'Email', value: 200 },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Reports</h1>
-        <Select>
+        <Select onValueChange={setPeriod} defaultValue={period}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select period" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="last30days">Last 30 Days</SelectItem>
+            <SelectItem value="lastMonth">Last 30 Days</SelectItem>
             <SelectItem value="lastQuarter">Last Quarter</SelectItem>
             <SelectItem value="lastYear">Last Year</SelectItem>
           </SelectContent>
@@ -52,9 +68,9 @@ export default function Reports() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={salesData}>
-                <XAxis dataKey="month" />
-                <YAxis />
+              <BarChart data={data}>
+                <XAxis dataKey="month" tick={<CustomXAxis />} tickLine={false} axisLine={false} />
+                <YAxis tick={<CustomYAxis />} tickLine={false} axisLine={false} />
                 <Tooltip />
                 <Legend />
                 <Bar dataKey="sales" fill="#8884d8" />
@@ -93,13 +109,30 @@ export default function Reports() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={conversionRateData}>
-                <XAxis dataKey="month" />
-                <YAxis />
+              <LineChart data={data}>
+                <XAxis dataKey="month" tick={<CustomXAxis />} tickLine={false} axisLine={false} />
+                <YAxis tick={<CustomYAxis />} tickLine={false} axisLine={false} />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="rate" stroke="#8884d8" />
+                <Line type="monotone" dataKey="conversionRate" stroke="#8884d8" />
               </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Lead Generation</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={data}>
+                <XAxis dataKey="month" tick={<CustomXAxis />} tickLine={false} axisLine={false} />
+                <YAxis tick={<CustomYAxis />} tickLine={false} axisLine={false} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="leads" fill="#82ca9d" />
+              </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
