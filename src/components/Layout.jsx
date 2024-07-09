@@ -13,9 +13,11 @@ import {
   Bell,
   Search
 } from 'lucide-react';
+import { useGlobalContext } from '@/context/GlobalContext';
 
 export const Layout = ({ children }) => {
   const router = useRouter();
+  const { state } = useGlobalContext();
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
@@ -64,8 +66,8 @@ export const Layout = ({ children }) => {
                 <Bell className="w-5 h-5" />
               </Button>
               <Avatar>
-                <AvatarImage src="/api/placeholder/32/32" alt="User" />
-                <AvatarFallback>U</AvatarFallback>
+                <AvatarImage src={state.user?.image || "/api/placeholder/32/32"} alt={state.user?.name || "User"} />
+                <AvatarFallback>{state.user?.name?.[0] || "U"}</AvatarFallback>
               </Avatar>
             </div>
           </div>
