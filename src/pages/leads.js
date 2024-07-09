@@ -50,8 +50,8 @@ const LeadCard = ({ lead, index, onEdit, onDelete }) => (
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => onEdit(lead)}>Edit</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete(lead.id)} className="text-red-600">Delete</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => onEdit(lead)}>Edit</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => onDelete(lead.id)} className="text-red-600">Delete</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
