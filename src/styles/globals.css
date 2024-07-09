@@ -127,7 +127,7 @@
 }
 
 .navbar-logo {
-  @apply text-2xl font-bold text-primary;
+  @apply text-primary hover:text-primary/90 transition-colors duration-300;
 }
 
 .navbar-links {
